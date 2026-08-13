@@ -35,6 +35,8 @@
 const API_URL = "https://time-match-api.saeedsaber1020.workers.dev";
 
 let selectedDate = new Date();
+let selectedMode = 'today';
+let lastDayKey = dateYMD(new Date());
 
 const STREAMS = {
   "الدرعية-الأهلي": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/421786.ts",
@@ -150,9 +152,16 @@ function normalizeMatch(m){
       !m.home_team && !m.away_team && !m.team1 && !m.team2 &&
       !m.teams && !m.fixture) {
     const numericStatus = Number(m.status);
-    const isLive = numericStatus === 1 || m.is_live === true;
-    const isFinished = numericStatus === 2 || m.is_finished === true;
-    const statusText = isLive ? 'مباشر' : (isFinished ? 'انتهت' : 'قادمة');
+    const isLive = typeof m.is_live === 'boolean'
+      ? m.is_live
+      : (numericStatus === 1);
+    const isFinished = typeof m.is_finished === 'boolean'
+      ? m.is_finished
+      : (numericStatus === 2);
+    const startTime = m.start_time || m.kickoff_time || m.formatted || '';
+      const statusText = isLive
+        ? (m.status_text || 'مباشر')
+        : (isFinished ? 'انتهت' : (startTime ? `تبدأ ${startTime}` : 'قادمة'));
 
     return {
       id: m.id,
@@ -167,11 +176,12 @@ function normalizeMatch(m){
         logo: m.away_logo || '',
         score: m.away_score ?? '-'
       },
-      time: m.formatted || m.time || '--:--',
-      statusText,
-      isLive,
-      isFinished,
-      isUpcoming: !isLive && !isFinished
+      time: startTime || m.time || '--:--',
+      startTime: startTime || '--:--',
+        statusText: isLive ? (m.status_text && !/^[0-9]+$/.test(String(m.status_text).trim()) ? m.status_text : 'مباشر') : (isFinished ? 'انتهت' : statusText),
+        isLive,
+        isFinished,
+        isUpcoming: !isLive && !isFinished
     };
   }
 
@@ -195,7 +205,8 @@ function normalizeMatch(m){
       home: { name: homeName, logo: homeLogo, score: homeScore },
       away: { name: awayName, logo: awayLogo, score: awayScore },
       time: matchTime,
-      statusText: isLive ? 'مباشر' : (isFinished ? 'انتهت' : matchTime),
+      startTime: matchTime,
+      statusText: isLive ? 'مباشر' : (isFinished ? 'انتهت' : `تبدأ ${matchTime}`),
       isLive,
       isFinished,
       isUpcoming: !isLive && !isFinished
@@ -338,19 +349,22 @@ function closeModal(){
 
 function fixtureCard(m){
   const safe = JSON.stringify(m).replace(/'/g, "&#39;");
+  const showScore = m.isLive || m.isFinished;
+  const homeScore = showScore ? m.home.score : '';
+  const awayScore = showScore ? m.away.score : '';
   return `<article class="match">
     <div class="matchtop"><span>${m.leagueName}</span><span class="status">${m.statusText}</span></div>
     <div class="teams">
       <div>
         <img src="${m.home.logo}" alt="" onerror="this.style.display='none'">
         <b>${m.home.name}</b>
-        <div class="score">${m.home.score}</div>
+        <div class="score">${homeScore}</div>
       </div>
       <div><small>${m.time}</small><div style="color:#168cff;font-weight:900;margin:8px">VS</div></div>
       <div>
         <img src="${m.away.logo}" alt="" onerror="this.style.display='none'">
         <b>${m.away.name}</b>
-        <div class="score">${m.away.score}</div>
+        <div class="score">${awayScore}</div>
       </div>
     </div>
     <button class="details" onclick='openModal(${safe})'>مشاهدة البث / التفاصيل</button>
@@ -394,14 +408,33 @@ async function loadFixtures(){
 document.querySelectorAll('.datebtn').forEach(b => b.onclick = () => {
   document.querySelectorAll('.datebtn').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
+  selectedMode = b.dataset.date === 'tomorrow' ? 'tomorrow' : 'today';
   selectedDate = new Date();
-  if(b.dataset.date === 'tomorrow') selectedDate.setDate(selectedDate.getDate()+1);
+  if(selectedMode === 'tomorrow') selectedDate.setDate(selectedDate.getDate()+1);
   loadFixtures();
 });
 
 $('status').onchange = loadFixtures;
+
+function checkMidnightRollover(){
+  const todayKey = dateYMD(new Date());
+  if(todayKey === lastDayKey) return;
+
+  lastDayKey = todayKey;
+  selectedDate = new Date();
+  if(selectedMode === 'tomorrow') selectedDate.setDate(selectedDate.getDate() + 1);
+
+  document.querySelectorAll('.datebtn').forEach(x => {
+    x.classList.toggle('active', x.dataset.date === selectedMode);
+  });
+  loadFixtures();
+}
+
 loadFixtures();
-setInterval(loadFixtures, 60000);
+setInterval(() => {
+  checkMidnightRollover();
+  loadFixtures();
+}, 60000);
 </script>
 </body>
 </html>
