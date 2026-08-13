@@ -51,34 +51,53 @@ function dateYMD(d){
   return `${y}-${m}-${day}`;
 }
 
-// دالة تفكيك البيانات المتداخلة مهما كان شكلها (Universal Array Flattening)
+// دالة فحص وتفريغ البيانات المتداخلة العميقة
 function flattenMatches(data) {
+  if (!data) return [];
   let list = [];
-  function recurse(item) {
-    if (!item) return;
-    if (Array.isArray(item)) {
-      item.forEach(recurse);
-    } else if (typeof item === 'object') {
-      if (item.homeTeam || item.awayTeam || item.home || item.away || item.home_team || item.team1) {
-        list.push(item);
-      } else if (item.events && Array.isArray(item.events)) {
-        recurse(item.events);
-      } else if (item.matches && Array.isArray(item.matches)) {
-        recurse(item.matches);
-      } else if (item.data) {
-        recurse(item.data);
-      } else {
-        Object.values(item).forEach(v => {
-          if (typeof v === 'object') recurse(v);
-        });
+  
+  function search(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    
+    if (Array.isArray(obj)) {
+      obj.forEach(search);
+      return;
+    }
+
+    // التحقق مما إذا كان الكائن يمثل مباراة فعلياً
+    const isMatch = obj.homeTeam || obj.awayTeam || 
+                    obj.home || obj.away || 
+                    obj.home_team || obj.away_team || 
+                    obj.team1 || obj.team2 || 
+                    (obj.teams && (obj.teams.home || obj.teams[0])) ||
+                    obj.fixture;
+
+    if (isMatch) {
+      list.push(obj);
+      return;
+    }
+
+    // التعمق داخل المفاتيح الشهيرة للاستجابات
+    const keys = ['events', 'matches', 'response', 'result', 'data', 'fixtures', 'items'];
+    let found = false;
+    for (let k of keys) {
+      if (obj[k] && (Array.isArray(obj[k]) || typeof obj[k] === 'object')) {
+        search(obj[k]);
+        found = true;
       }
     }
+    
+    if (!found) {
+      Object.values(obj).forEach(val => {
+        if (val && typeof val === 'object') search(val);
+      });
+    }
   }
-  recurse(data);
+
+  search(data);
   return list;
 }
 
-// دالة استخراج النص
 function extractStr(val) {
   if (val === null || val === undefined) return '';
   if (typeof val === 'string' || typeof val === 'number') return String(val).trim();
@@ -88,7 +107,6 @@ function extractStr(val) {
   return '';
 }
 
-// دالة استخراج الأهداف
 function extractScore(val) {
   if (val === null || val === undefined) return '-';
   if (typeof val === 'number' || typeof val === 'string') return String(val);
@@ -99,21 +117,24 @@ function extractScore(val) {
   return '-';
 }
 
-// دالة معالجة وتحويل التوقيت من أرقام UNIX Timestamp إلى ساعات ودقائق
 function formatMatchTime(val, startTimestamp) {
   let ts = startTimestamp || val;
   if (ts) {
     let num = Number(ts);
     if (!isNaN(num) && num > 100000) {
-      if (num < 10000000000) num = num * 1000; // تحويل من ثواني إلى ملي ثانية
+      if (num < 10000000000) num = num * 1000;
       const d = new Date(num);
       if (!isNaN(d.getTime())) {
         return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
       }
     }
-  }
-  if (typeof val === 'string' && val.includes(':') && val.length < 15) {
-    return val.trim();
+    if (typeof val === 'string') {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (val.includes(':') && val.length < 15) return val.trim();
+    }
   }
   return '--:--';
 }
@@ -121,42 +142,66 @@ function formatMatchTime(val, startTimestamp) {
 function normalizeMatch(m){
   if (!m || typeof m !== 'object') return null;
 
-  // 1. الفريق الأول
+  // نمط API-Football (m.fixture & m.teams)
+  if (m.fixture && m.teams) {
+    const homeName = m.teams.home?.name || 'غير معروف';
+    const awayName = m.teams.away?.name || 'غير معروف';
+    const homeLogo = m.teams.home?.logo || '';
+    const awayLogo = m.teams.away?.logo || '';
+    const homeScore = m.goals?.home ?? '-';
+    const awayScore = m.goals?.away ?? '-';
+    const leagueName = m.league?.name || 'مباراة كرة قدم';
+    const matchTime = formatMatchTime(m.fixture.date, m.fixture.timestamp);
+    const statusShort = m.fixture.status?.short || '';
+    const isLive = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(statusShort);
+    const isFinished = ['FT', 'AET', 'PEN'].includes(statusShort);
+
+    return {
+      id: m.fixture.id || `${homeName}-${awayName}`,
+      leagueName,
+      home: { name: homeName, logo: homeLogo, score: homeScore },
+      away: { name: awayName, logo: awayLogo, score: awayScore },
+      time: matchTime,
+      statusText: isLive ? 'مباشر' : (isFinished ? 'انتهت' : matchTime),
+      isLive,
+      isFinished,
+      isUpcoming: !isLive && !isFinished
+    };
+  }
+
+  // نمط Sofascore والنماذج المباشرة الأخرى
   const homeObj = m.homeTeam || m.home_team || m.home || m.team1 || {};
+  const awayObj = m.awayTeam || m.away_team || m.away || m.team2 || {};
+
   const homeName = extractStr(homeObj) || extractStr(m.home_name) || 'غير معروف';
+  const awayName = extractStr(awayObj) || extractStr(m.away_name) || 'غير معروف';
+
   let homeLogo = homeObj.logo || m.home_logo || m.home_team_logo || '';
   if (!homeLogo && homeObj.id) {
     homeLogo = `https://api.sofascore.com/api/v1/team/${homeObj.id}/image`;
   }
 
-  // 2. الفريق الثاني
-  const awayObj = m.awayTeam || m.away_team || m.away || m.team2 || {};
-  const awayName = extractStr(awayObj) || extractStr(m.away_name) || 'غير معروف';
   let awayLogo = awayObj.logo || m.away_logo || m.away_team_logo || '';
   if (!awayLogo && awayObj.id) {
     awayLogo = `https://api.sofascore.com/api/v1/team/${awayObj.id}/image`;
   }
 
-  // 3. الأهداف
   const homeScore = extractScore(m.homeScore) !== '-' ? extractScore(m.homeScore) : extractScore(m.home_score);
   const awayScore = extractScore(m.awayScore) !== '-' ? extractScore(m.awayScore) : extractScore(m.away_score);
 
-  // 4. البطولة
   const leagueObj = m.tournament || m.league || {};
   let leagueName = extractStr(leagueObj) || extractStr(m.league_name) || 'مباراة دولية / محلية';
   if (leagueObj.category && leagueObj.category.name) {
     leagueName = `${leagueObj.category.name} - ${leagueName}`;
   }
 
-  // 5. وقت المباراة
   const matchTime = formatMatchTime(m.time || m.start_time, m.startTimestamp);
 
-  // 6. الحالة
   const statusType = typeof m.status === 'object' ? m.status?.type : String(m.status || '');
   const statusDesc = typeof m.status === 'object' ? m.status?.description : '';
 
-  const isLive = statusType === 'inprogress' || statusType === 'live' || m.status === 1 || m.is_live;
-  const isFinished = statusType === 'finished' || m.status === 2 || m.is_finished;
+  const isLive = statusType === 'inprogress' || statusType === 'live' || m.status === 1 || m.is_live || false;
+  const isFinished = statusType === 'finished' || m.status === 2 || m.is_finished || false;
   const isUpcoming = !isLive && !isFinished;
 
   let statusText = matchTime;
@@ -168,11 +213,11 @@ function normalizeMatch(m){
 
   return {
     id: m.id || m.match_id || `${homeName}-${awayName}`,
-    leagueName: leagueName,
+    leagueName,
     home: { name: homeName, logo: homeLogo, score: homeScore },
     away: { name: awayName, logo: awayLogo, score: awayScore },
     time: matchTime,
-    statusText: statusText,
+    statusText,
     isLive,
     isFinished,
     isUpcoming
@@ -296,8 +341,8 @@ async function loadFixtures(){
     if(!res.ok) throw new Error(`HTTP error ${res.status}`);
     
     const data = await res.json();
-    
-    // استخراج ومساواة جميع المباريات من الـ JSON المتداخل
+    console.log("البيانات الراجعة من الـ API:", data);
+
     let rawMatches = flattenMatches(data);
     let matches = rawMatches.map(normalizeMatch).filter(m => m !== null);
 
