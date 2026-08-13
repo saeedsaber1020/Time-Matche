@@ -6,25 +6,105 @@
 <title>Time Match | مباريات وأخبار كرة القدم</title>
 <!-- مفتاح API مضمّن بناءً على طلب المستخدم؛ لا تستخدم هذه النسخة في الإنتاج دون حماية المفتاح. -->
 <style>
-:root{--bg:#030916;--panel:#0a1c38;--panel2:#07142a;--blue:#168cff;--cyan:#4de6ff;--pink:#ff4fd8;--text:#fff;--muted:#91a4bd;--line:rgba(111,180,255,.18)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 12% 0%,#0b2852 0,transparent 34%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}a{color:inherit;text-decoration:none}button,select{font:inherit}button{cursor:pointer;border:0}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}.nav{height:72px;border-bottom:1px solid var(--line);background:rgba(3,9,22,.86);backdrop-filter:blur(14px);position:sticky;top:0;z-index:5}.navin{height:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.brand b{font-size:20px;color:var(--blue)}.brand span{color:#fff}.brand small{display:block;color:#7990ae;font-size:9px;letter-spacing:3px}.brand img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:1px solid #168cff66}.links{display:flex;gap:28px;color:#a9b7cb;font-weight:bold;font-size:14px}.tg{display:inline-flex;align-items:center;gap:8px;padding:11px 17px;border-radius:999px;border:1px solid #168cffaa;background:#168cff18;color:#9bd0ff;font-weight:900}.hero{padding:75px 0 55px;display:grid;grid-template-columns:1.1fr .9fr;gap:35px;align-items:center}.eyebrow{font-size:11px;letter-spacing:3px;color:#65b7ff;font-weight:900}.hero h1{font-size:clamp(38px,6vw,74px);line-height:1.05;margin:16px 0}.grad{background:linear-gradient(110deg,var(--blue),var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:#aab7c9;line-height:2;font-size:17px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}.primary,.secondary{padding:14px 20px;border-radius:13px;font-weight:900}.primary{background:var(--blue);color:#031023;box-shadow:0 0 28px #168cff55}.secondary{border:1px solid var(--line);background:#ffffff09}.monitor,.card{border:1px solid var(--line);background:linear-gradient(145deg,#0b2953cc,#061126dd);box-shadow:inset 0 1px #ffffff0b,0 20px 70px #0049a018;border-radius:24px}.monitor{min-height:250px;padding:25px;display:flex;flex-direction:column;justify-content:space-between}.monitor strong{font-size:62px;color:var(--cyan)}.monitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.monitor-grid div{border:1px solid #ffffff0c;border-radius:13px;padding:14px;text-align:center;color:#9badc5;font-size:12px}.section{padding:40px 0 70px}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}.section h2{font-size:34px;margin:8px 0 0}.filters{padding:12px;display:flex;gap:9px;flex-wrap:wrap;justify-content:space-between;margin-bottom:18px}.filters select,.datebtn{background:#ffffff0a;color:#d9e4f4;border:1px solid #ffffff12;padding:11px 14px;border-radius:11px}.datebtn.active{background:var(--blue);color:#031023}.matches,.news{display:grid;gap:15px}.matches{grid-template-columns:repeat(2,1fr)}.match{padding:17px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(145deg,#0b1f3be8,#050f21)}.matchtop{display:flex;justify-content:space-between;color:#9fb2cb;font-size:12px;border-bottom:1px solid #ffffff0d;padding-bottom:12px}.status{color:#78c6ff}.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:10px;padding:24px 0}.teams img{width:50px;height:50px;object-fit:contain}.teams b{display:block;margin-top:7px;font-size:13px}.score{font-size:25px;font-weight:900}.details{width:100%;padding:12px;border-radius:11px;background:#168cff18;border:1px solid #168cff55;color:#9bd0ff;font-weight:900}.news{grid-template-columns:repeat(4,1fr)}.news article{overflow:hidden}.news .cover{height:140px;background:linear-gradient(135deg,#0a326d,#081226);display:grid;place-items:center}.news img{width:100%;height:100%;object-fit:cover}.news .body{padding:15px}.news h3{font-size:15px;line-height:1.8;margin:8px 0}.news p{font-size:12px;color:#8fa2ba;line-height:1.8}.float{position:fixed;left:24px;bottom:24px;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:#168cff;color:#021024;font-size:25px;box-shadow:0 0 28px #168cff99;z-index:9}.empty{padding:30px;text-align:center;color:#92a5bd}.modal{position:fixed;inset:0;background:#000b;display:none;place-items:center;padding:18px;z-index:10}.modal.show{display:grid}.modalbox{max-width:520px;width:100%;padding:25px}.close{float:left;background:#ffffff12;color:#fff;border-radius:50%;width:34px;height:34px}.footer{border-top:1px solid var(--line);padding:28px 0;color:#8fa2ba}.footerin{display:flex;align-items:center;justify-content:space-between;gap:15px}@media(max-width:800px){.links{display:none}.hero{grid-template-columns:1fr;padding-top:45px}.matches,.news{grid-template-columns:1fr}.section h2{font-size:28px}.footerin{flex-direction:column;align-items:stretch}.tg{justify-content:center}}
+:root{--bg:#030916;--panel:#0a1c38;--panel2:#07142a;--blue:#168cff;--cyan:#4de6ff;--pink:#ff4fd8;--text:#fff;--muted:#91a4bd;--line:rgba(111,180,255,.18)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 12% 0%,#0b2852 0,transparent 34%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}a{color:inherit;text-decoration:none}button,select{font:inherit}button{cursor:pointer;border:0}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}.nav{height:72px;border-bottom:1px solid var(--line);background:rgba(3,9,22,.86);backdrop-filter:blur(14px);position:sticky;top:0;z-index:5}.navin{height:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.brand b{font-size:20px;color:var(--blue)}.brand span{color:#fff}.brand small{display:block;color:#7990ae;font-size:9px;letter-spacing:3px}.brand img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:1px solid #168cff66}.links{display:flex;gap:28px;color:#a9b7cb;font-weight:bold;font-size:14px}.tg{display:inline-flex;align-items:center;gap:8px;padding:11px 17px;border-radius:999px;border:1px solid #168cffaa;background:#168cff18;color:#9bd0ff;font-weight:900}.hero{padding:75px 0 55px;display:grid;grid-template-columns:1.1fr .9fr;gap:35px;align-items:center}.eyebrow{font-size:11px;letter-spacing:3px;color:#65b7ff;font-weight:900}.hero h1{font-size:clamp(38px,6vw,74px);line-height:1.05;margin:16px 0}.grad{background:linear-gradient(110deg,var(--blue),var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:#aab7c9;line-height:2;font-size:17px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}.primary,.secondary{padding:14px 20px;border-radius:13px;font-weight:900}.primary{background:var(--blue);color:#031023;box-shadow:0 0 28px #168cff55}.secondary{border:1px solid var(--line);background:#ffffff09}.monitor,.card{border:1px solid var(--line);background:linear-gradient(145deg,#0b2953cc,#061126dd);box-shadow:inset 0 1px #ffffff0b,0 20px 70px #0049a018;border-radius:24px}.monitor{min-height:250px;padding:25px;display:flex;flex-direction:column;justify-content:space-between}.monitor strong{font-size:62px;color:var(--cyan)}.monitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.monitor-grid div{border:1px solid #ffffff0c;border-radius:13px;padding:14px;text-align:center;color:#9badc5;font-size:12px}.section{padding:40px 0 70px}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}.section h2{font-size:34px;margin:8px 0 0}.filters{padding:12px;display:flex;gap:9px;flex-wrap:wrap;justify-content:space-between;margin-bottom:18px}.filters select,.datebtn{background:#ffffff0a;color:#d9e4f4;border:1px solid #ffffff12;padding:11px 14px;border-radius:11px}.datebtn.active{background:var(--blue);color:#031023}.matches{display:grid;gap:15px}.matches{grid-template-columns:repeat(2,1fr)}.match{padding:17px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(145deg,#0b1f3be8,#050f21)}.matchtop{display:flex;justify-content:space-between;color:#9fb2cb;font-size:12px;border-bottom:1px solid #ffffff0d;padding-bottom:12px}.status{color:#78c6ff}.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:10px;padding:24px 0}.teams img{width:50px;height:50px;object-fit:contain}.teams b{display:block;margin-top:7px;font-size:13px}.score{font-size:25px;font-weight:900}.details{width:100%;padding:12px;border-radius:11px;background:#168cff18;border:1px solid #168cff55;color:#9bd0ff;font-weight:900}.float{position:fixed;left:24px;bottom:24px;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:#168cff;color:#021024;font-size:25px;box-shadow:0 0 28px #168cff99;z-index:9}.empty{padding:30px;text-align:center;color:#92a5bd}.modal{position:fixed;inset:0;background:#000b;display:none;place-items:center;padding:18px;z-index:10}.modal.show{display:grid}.modalbox{max-width:520px;width:100%;padding:25px}.close{float:left;background:#ffffff12;color:#fff;border-radius:50%;width:34px;height:34px}.footer{border-top:1px solid var(--line);padding:28px 0;color:#8fa2ba}.footerin{display:flex;align-items:center;justify-content:space-between;gap:15px}@media(max-width:800px){.links{display:none}.hero{grid-template-columns:1fr;padding-top:45px}.matches{grid-template-columns:1fr}.section h2{font-size:28px}.footerin{flex-direction:column;align-items:stretch}.tg{justify-content:center}}
 </style>
 </head>
 <body>
-<header class="nav"><div class="wrap navin"><a class="brand" href="#top"><img src="https://b.top4top.io/p_3877sx2h31.jpg" alt="Time Match"><div><b>TIME</b> <span>MATCH</span><small>FOOTBALL PULSE</small></div></a><nav class="links"><a href="#matches">المباريات</a><a href="#news">الأخبار</a><a href="#about">عن المنصة</a></nav><a class="tg" href="https://t.me/TimeMatche" target="_blank">➤ انضم للقناة</a></div></header>
+<header class="nav"><div class="wrap navin"><a class="brand" href="#top"><img src="https://b.top4top.io/p_3877sx2h31.jpg" alt="Time Match"><div><b>TIME</b> <span>MATCH</span><small>FOOTBALL PULSE</small></div></a><nav class="links"><a href="#matches">المباريات</a><a href="#about">عن المنصة</a></nav><a class="tg" href="https://t.me/TimeMatche" target="_blank">➤ انضم للقناة</a></div></header>
 <main id="top" class="wrap">
 <section class="hero"><div><div class="eyebrow">TIME MATCH / LIVE CENTER</div><h1>كل صافرة، كل هدف،<br><span class="grad">في وقتها الحقيقي.</span></h1><p>تابع مباريات كرة القدم والنتائج لحظة بلحظة، مع أخبار كرة القدم وروابط المصادر الأصلية.</p><div class="actions"><a class="primary" href="#matches">استكشف المباريات ←</a><a class="secondary" href="https://t.me/TimeMatche" target="_blank">➤ تابعنا على تليجرام</a></div></div><div class="monitor"><div class="eyebrow">LIVE MONITOR / 01</div><div><strong id="liveCount">00</strong><div>مباراة قيد المتابعة الآن</div></div><div class="monitor-grid"><div>♨<br>تحديث حي</div><div>▣<br>بث مباشر</div><div>🏆<br>بطولات</div></div></div></section>
-<section id="matches" class="section"><div class="section-head"><div><div class="eyebrow">MATCH CENTER</div><h2>مركز المباريات</h2></div><span class="eyebrow">تحديث تلقائي كل دقيقة</span></div><div class="card filters"><div><button class="datebtn active" data-date="today">اليوم</button><button class="datebtn" data-date="tomorrow">غداً</button></div><div><select id="status"><option value="ALL">كل الحالات</option><option value="LIVE">مباشر الآن</option><option value="UPCOMING">قادمة</option><option value="FINISHED">منتهية</option></select><select id="league"><option value="all">كل البطولات</option><option value="39">الدوري الإنجليزي</option><option value="140">الدوري الإسباني</option><option value="135">الدوري الإيطالي</option><option value="2">دوري الأبطال</option></select></div></div><div id="matchesList" class="matches"><div class="card empty">جاري تحميل المباريات...</div></div></section>
-<section id="news" class="section"><div class="section-head"><div><div class="eyebrow">FOOTBALL ONLY</div><h2>آخر أخبار كرة القدم</h2></div></div><div id="newsList" class="news"><div class="card empty">جاري تحميل الأخبار...</div></div></section>
+<section id="matches" class="section"><div class="section-head"><div><div class="eyebrow">MATCH CENTER</div><h2>مركز المباريات</h2></div><span class="eyebrow">تحديث تلقائي كل دقيقة</span></div><div class="card filters"><div><button class="datebtn active" data-date="today">اليوم</button><button class="datebtn" data-date="tomorrow">غداً</button></div><div><select id="status"><option value="ALL">كل الحالات</option><option value="LIVE">مباشر الآن</option><option value="UPCOMING">قادمة</option><option value="FINISHED">منتهية</option></select><select id="league">
+<option value="all">كل البطولات المختارة</option>
+<option value="39">الدوري الإنجليزي</option>
+<option value="140">الدوري الإسباني</option>
+<option value="135">الدوري الإيطالي</option>
+<option value="78">الدوري الألماني</option>
+<option value="61">الدوري الفرنسي</option>
+<option value="203">الدوري التركي</option>
+<option value="307">الدوري السعودي</option>
+<option value="233">الدوري المصري</option>
+<option value="2">دوري أبطال أوروبا</option>
+<option value="3">الدوري الأوروبي</option>
+<option value="848">دوري المؤتمر الأوروبي</option>
+<option value="12">دوري أبطال أفريقيا</option>
+<option value="17">دوري أبطال آسيا</option>
+<option value="15">كأس العالم للأندية</option>
+<option value="1">كأس العالم</option>
+<option value="4">يورو</option>
+<option value="6">كأس أمم أفريقيا</option>
+</select></div></div><div id="matchesList" class="matches"><div class="card empty">جاري تحميل المباريات...</div></div></section>
 </main><footer id="about" class="footer"><div class="wrap footerin"><div><b style="color:#168cff">TIME</b> MATCH<br><small>نبض كرة القدم بين يديك.</small></div><a class="primary" href="https://t.me/TimeMatche" target="_blank">➤ انضم إلى قناة Time Match</a></div></footer><a class="float" href="https://t.me/TimeMatche" target="_blank" aria-label="تليجرام">➤</a>
 <div id="modal" class="modal"><div class="modalbox monitor"><button class="close" onclick="closeModal()">×</button><div class="eyebrow">MATCH DETAILS</div><h2 id="modalTitle"></h2><p id="modalMeta" style="color:#aab7c9;line-height:2"></p><div class="secondary">رابط البث الرسمي غير متوفر حالياً. سيظهر عند توفره من الناشر الرسمي.</div></div></div>
 <script>
-const API_KEY="655ca10ea50b441f850d5dbd580019db"; /* تنبيه: المفتاح ظاهر داخل HTML كما طلب المستخدم؛ استخدم خادماً خلفياً في الإنتاج. */let selectedDate=new Date();
-const $=id=>document.getElementById(id);const fmt=d=>new Date(d).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+const API_KEY="6d622fa358c0c671dfedc938fd0f05ca"; /* تنبيه: المفتاح ظاهر داخل HTML كما طلب المستخدم؛ استخدم خادماً خلفياً في الإنتاج. */
+let selectedDate=new Date();
+
+/* الدوريات والبطولات المسموح بها فقط */
+const ALLOWED_LEAGUES = new Set([
+  39,   // Premier League
+  140,  // La Liga
+  135,  // Serie A
+  78,   // Bundesliga
+  61,   // Ligue 1
+  203,  // Süper Lig (Turkey)
+  307,  // Saudi Pro League
+  233,  // Egypt Premier League
+  2,    // UEFA Champions League
+  3,    // UEFA Europa League
+  848,  // UEFA Conference League
+  12,   // CAF Champions League
+  17,   // AFC Champions League
+  15,   // FIFA Club World Cup
+  1,    // FIFA World Cup
+  4,    // UEFA Euro
+  6     // Africa Cup of Nations
+]);
+
+const $=id=>document.getElementById(id);
+const fmt=d=>new Date(d).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
 function dateStr(d){return d.toISOString().slice(0,10)}
 function statusLabel(s,e){if(['1H','2H','HT','ET','P','LIVE'].includes(s))return e?`مباشر ${e}'`:'مباشر';if(s==='FT')return'انتهت';return'قادمة'}
-function openModal(m){$('modalTitle').textContent=`${m.teams.home.name} × ${m.teams.away.name}`;$('modalMeta').textContent=`${m.league.name} — ${fmt(m.fixture.date)} — ${statusLabel(m.fixture.status.short,m.fixture.status.elapsed)}`;$('modal').classList.add('show')}function closeModal(){$('modal').classList.remove('show')}
+function openModal(m){$('modalTitle').textContent=`${m.teams.home.name} × ${m.teams.away.name}`;$('modalMeta').textContent=`${m.league.name} — ${fmt(m.fixture.date)} — ${statusLabel(m.fixture.status.short,m.fixture.status.elapsed)}`;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show')}
 function fixtureCard(m){return `<article class="match"><div class="matchtop"><span>${m.league.name}</span><span class="status">${statusLabel(m.fixture.status.short,m.fixture.status.elapsed)}</span></div><div class="teams"><div><img src="${m.teams.home.logo||''}" alt=""><b>${m.teams.home.name}</b><div class="score">${m.goals.home??'-'}</div></div><div><small>${fmt(m.fixture.date)}</small><div style="color:#168cff;font-weight:900;margin:8px">VS</div></div><div><img src="${m.teams.away.logo||''}" alt=""><b>${m.teams.away.name}</b><div class="score">${m.goals.away??'-'}</div></div></div><button class="details" onclick='openModal(${JSON.stringify(m).replace(/'/g,"&#39;")})'>مشاهدة البث / التفاصيل</button></article>`}
-async function loadFixtures(){if(!API_KEY){$('matchesList').innerHTML='<div class="card empty">أدخل مفتاح API-Football في إعدادات المتصفح عبر الكود: localStorage.setItem("TIME_MATCH_API_KEY","ضع_المفتاح_هنا")</div>';return}try{const p=new URLSearchParams({date:dateStr(selectedDate)});const s=$('status').value,l=$('league').value;if(s==='LIVE')p.set('live','all');if(s==='UPCOMING')p.set('status','NS');if(s==='FINISHED')p.set('status','FT');if(l!=='all')p.set('league',l);const r=await fetch('https://v3.football.api-sports.io/fixtures?'+p,{headers:{'x-apisports-key':API_KEY}});const j=await r.json();const a=j.response||[];$('liveCount').textContent=String(a.filter(x=>['1H','2H','HT','ET','P','LIVE'].includes(x.fixture.status.short)).length).padStart(2,'0');$('matchesList').innerHTML=a.length?a.map(fixtureCard).join(''):'<div class="card empty">لا توجد مباريات مطابقة.</div>'}catch(e){$('matchesList').innerHTML='<div class="card empty">تعذر جلب المباريات حالياً.</div>'}}
-async function loadNews(){try{const r=await fetch('https://feeds.bbci.co.uk/sport/football/rss.xml');const x=await r.text();const blocks=[...x.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,8);const get=(b,t)=>b.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`,'i'))?.[1]?.replace(/<!\[CDATA\[|\]\]>/g,'')||'';$('newsList').innerHTML=blocks.map(([,b])=>{const t=get(b,'title'),l=get(b,'link'),d=get(b,'description');return `<article class="card"><div class="cover">⚽</div><div class="body"><small style="color:#65b7ff">BBC Sport Football</small><h3>${t}</h3><p>${d.replace(/<[^>]*>/g,'').slice(0,130)}</p><a class="tg" href="${l}" target="_blank">قراءة الخبر ←</a></div></article>`}).join('')}catch(e){$('newsList').innerHTML='<div class="card empty">تعذر جلب الأخبار حالياً.</div>'}}
-document.querySelectorAll('.datebtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.datebtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedDate=new Date();if(b.dataset.date==='tomorrow')selectedDate.setDate(selectedDate.getDate()+1);loadFixtures()});$('status').onchange=loadFixtures;$('league').onchange=loadFixtures;loadFixtures();loadNews();
+
+async function loadFixtures(){
+  if(!API_KEY){
+    $('matchesList').innerHTML='<div class="card empty">أدخل مفتاح API-Football</div>';
+    return;
+  }
+  try{
+    const p=new URLSearchParams({date:dateStr(selectedDate)});
+    const s=$('status').value, l=$('league').value;
+    if(s==='LIVE') p.set('live','all');
+    if(s==='UPCOMING') p.set('status','NS');
+    if(s==='FINISHED') p.set('status','FT');
+    if(l!=='all') p.set('league',l);
+
+    const r=await fetch('https://v3.football.api-sports.io/fixtures?'+p,{headers:{'x-apisports-key':API_KEY}});
+    const j=await r.json();
+    let a=j.response||[];
+
+    // لو اختار "كل البطولات" نفلتر بالدوريات المسموح بها فقط
+    if(l==='all'){
+      a=a.filter(x=>ALLOWED_LEAGUES.has(x.league.id));
+    }
+
+    $('liveCount').textContent=String(a.filter(x=>['1H','2H','HT','ET','P','LIVE'].includes(x.fixture.status.short)).length).padStart(2,'0');
+    $('matchesList').innerHTML=a.length?a.map(fixtureCard).join(''):'<div class="card empty">لا توجد مباريات مطابقة.</div>';
+  }catch(e){
+    $('matchesList').innerHTML='<div class="card empty">تعذر جلب المباريات حالياً.</div>';
+  }
+}
+
+document.querySelectorAll('.datebtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.datebtn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  selectedDate=new Date();
+  if(b.dataset.date==='tomorrow') selectedDate.setDate(selectedDate.getDate()+1);
+  loadFixtures();
+});
+$('status').onchange=loadFixtures;
+$('league').onchange=loadFixtures;
+loadFixtures();
 </script></body></html>
