@@ -32,12 +32,10 @@
 </div></div>
 
 <script>
-// رابط Cloudflare Worker الخاص بك
 const API_URL = "https://time-match-api.saeedsaber1020.workers.dev";
 
 let selectedDate = new Date();
 
-// قائمة البث المباشر المخصصة
 const STREAMS = {
   "الدرعية-الأهلي": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/421786.ts",
   "أبها-الحزم": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/421785.ts",
@@ -50,39 +48,62 @@ function dateYMD(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`; // صيغة YYYY-MM-DD
+  return `${y}-${m}-${day}`;
+}
+
+// دالة يستخرج منها الاسم أو الحقل بغض النظر عن طريقة صياغة الخوادم المختلفة
+function parseVal(val){
+  if (!val && val !== 0) return null;
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    return val.name || val.title || val.ar || val.en || val.name_ar || val.team_name || null;
+  }
+  return null;
 }
 
 function normalizeMatch(m){
   if(!m) return {};
-  
-  const homeName = m.home_team_name || m.home_name || m.home_title || m.home?.name || m.home || 'صاحب الأرض';
-  const awayName = m.away_team_name || m.away_name || m.away_title || m.away?.name || m.away || 'الضيف';
-  
-  const homeLogo = m.home_team_logo || m.home_logo || m.home?.logo || '';
-  const awayLogo = m.away_team_logo || m.away_logo || m.away?.logo || '';
 
-  const homeScore = m.home_score ?? m.home_goals ?? m.score_home ?? m.home?.score ?? '-';
-  const awayScore = m.away_score ?? m.away_goals ?? m.score_away ?? m.away?.score ?? '-';
+  // استخراج أسامي الفريقين
+  const homeName = parseVal(m.home_team_name) || parseVal(m.home_name) || parseVal(m.home_title) || 
+                   parseVal(m.home) || parseVal(m.team1) || parseVal(m.team1_name) || 
+                   parseVal(m.homeTeam) || parseVal(m.host) || 'غير معروف';
 
+  const awayName = parseVal(m.away_team_name) || parseVal(m.away_name) || parseVal(m.away_title) || 
+                   parseVal(m.away) || parseVal(m.team2) || parseVal(m.team2_name) || 
+                   parseVal(m.awayTeam) || parseVal(m.guest) || 'غير معروف';
+
+  // استخراج الشعارات
+  const homeLogo = m.home_team_logo || m.home_logo || m.home?.logo || m.team1_logo || m.team1?.logo || m.homeTeam?.logo || '';
+  const awayLogo = m.away_team_logo || m.away_logo || m.away?.logo || m.team2_logo || m.team2?.logo || m.awayTeam?.logo || '';
+
+  // استخراج الأهداف
+  const homeScore = m.home_score ?? m.home_goals ?? m.score_home ?? m.home?.score ?? m.team1_score ?? m.score1 ?? '-';
+  const awayScore = m.away_score ?? m.away_goals ?? m.score_away ?? m.away?.score ?? m.team2_score ?? m.score2 ?? '-';
+
+  // استخراج اسم البطولة
+  const leagueName = parseVal(m.league_name) || parseVal(m.league_title) || parseVal(m.league) || 
+                     parseVal(m.competition) || parseVal(m.comp_name) || parseVal(m.tournament) || 'مباراة دولية / محلية';
+
+  // تحديد الحالة ووقت المباراة
   const st = m.status;
-  const isLive = st === 1 || st === '1' || m.is_live || (m.formatted && m.formatted !== 'null');
-  const isFinished = st === 2 || st === '2' || m.is_finished;
+  const isLive = st === 1 || st === '1' || st === 'live' || m.is_live || (m.formatted && m.formatted !== 'null');
+  const isFinished = st === 2 || st === '2' || st === 'finished' || m.is_finished;
   const isUpcoming = !isLive && !isFinished;
 
   let statusText = 'قادمة';
   if(isLive){
-    statusText = m.formatted ? `مباشر ${m.formatted}` : 'مباشر';
+    statusText = m.formatted ? `مباشر ${m.formatted}` : (m.status_name || 'مباشر');
   } else if(isFinished){
     statusText = 'انتهت';
   }
 
   return {
     id: m.id || m.match_id || Math.random(),
-    leagueName: m.league_name || m.league_title || m.competition || 'بطولة عامة',
+    leagueName: leagueName,
     home: { name: homeName, logo: homeLogo, score: homeScore },
     away: { name: awayName, logo: awayLogo, score: awayScore },
-    time: m.time || m.match_time || '--:--',
+    time: m.time || m.match_time || m.start_time || '--:--',
     statusText: statusText,
     isLive,
     isFinished,
@@ -195,7 +216,7 @@ function renderMatches(matches, note=''){
   $('liveCount').textContent = String(liveCount).padStart(2,'0');
   $('matchesList').innerHTML = matches.length
     ? (note ? `<div class="card empty" style="padding:12px;color:#ffd27a">${note}</div>` : '') + matches.map(fixtureCard).join('')
-    : '<div class="card empty">لا توجد مباريات مطابقة.</div>';
+    : '<div class="card empty">لا توجد مباريات مطابقة لهذا اليوم.</div>';
 }
 
 async function loadFixtures(){
@@ -207,8 +228,14 @@ async function loadFixtures(){
     if(!res.ok) throw new Error(`HTTP error ${res.status}`);
     
     const data = await res.json();
-    let rawMatches = Array.isArray(data) ? data : (data.matches || Object.values(data));
     
+    // دعم استخراج المصفوفة حتى لو كانت كائن داخلي (e.g. data.matches)
+    let rawMatches = Array.isArray(data) ? data : (data.matches || data.data || Object.values(data));
+    
+    if(!Array.isArray(rawMatches)){
+      rawMatches = [];
+    }
+
     let matches = rawMatches.map(normalizeMatch);
 
     if(s === 'LIVE') matches = matches.filter(m => m.isLive);
