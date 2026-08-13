@@ -70,7 +70,9 @@ function flattenMatches(data) {
                     obj.home_team || obj.away_team || 
                     obj.team1 || obj.team2 || 
                     (obj.teams && (obj.teams.home || obj.teams[0])) ||
-                    obj.fixture;
+                    obj.fixture ||
+                    // الـ API الحالي يرجع id/time/status فقط
+                    (obj.id && ('time' in obj || 'status' in obj));
 
     if (isMatch) {
       list.push(obj);
@@ -141,6 +143,37 @@ function formatMatchTime(val, startTimestamp) {
 
 function normalizeMatch(m){
   if (!m || typeof m !== 'object') return null;
+
+  // استجابة الـ API الحالية: id / time / status بدون أسماء الفرق
+  // نعرضها بدل تجاهلها، إلى أن يرسل الـ backend تفاصيل الفرق كاملة.
+  if (m.id && !m.homeTeam && !m.awayTeam && !m.home && !m.away &&
+      !m.home_team && !m.away_team && !m.team1 && !m.team2 &&
+      !m.teams && !m.fixture) {
+    const numericStatus = Number(m.status);
+    const isLive = numericStatus === 1 || m.is_live === true;
+    const isFinished = numericStatus === 2 || m.is_finished === true;
+    const statusText = isLive ? 'مباشر' : (isFinished ? 'انتهت' : 'قادمة');
+
+    return {
+      id: m.id,
+      leagueName: m.league_name || 'مباراة كرة قدم',
+      home: {
+        name: m.home_name || `مباراة رقم ${m.id}`,
+        logo: m.home_logo || '',
+        score: m.home_score ?? '-'
+      },
+      away: {
+        name: m.away_name || 'سيتم تحميل التفاصيل',
+        logo: m.away_logo || '',
+        score: m.away_score ?? '-'
+      },
+      time: m.formatted || m.time || '--:--',
+      statusText,
+      isLive,
+      isFinished,
+      isUpcoming: !isLive && !isFinished
+    };
+  }
 
   // نمط API-Football (m.fixture & m.teams)
   if (m.fixture && m.teams) {
