@@ -442,6 +442,24 @@ function fixtureCard(m){
   </article>`;
 }
 
+function cacheKey(ymd){ return 'tm_matches_' + ymd; }
+function saveMatchesCache(ymd, matches){
+  try { localStorage.setItem(cacheKey(ymd), JSON.stringify({savedAt:Date.now(), matches})); } catch(e) {}
+}
+function readMatchesCache(ymd){
+  try {
+    const saved = JSON.parse(localStorage.getItem(cacheKey(ymd)) || 'null');
+    return saved && Array.isArray(saved.matches) ? saved : null;
+  } catch(e) { return null; }
+}
+function renderMatches(matches, note=''){
+  const liveCount = matches.filter(isLive).length;
+  $('liveCount').textContent = String(liveCount).padStart(2,'0');
+  $('matchesList').innerHTML = matches.length
+    ? (note ? `<div class="card empty" style="padding:12px;color:#ffd27a">${note}</div>` : '') + matches.map(fixtureCard).join('')
+    : '<div class="card empty">لا توجد مباريات مطابقة.</div>';
+}
+
 async function apiGet(path){
   const r = await fetch(API_BASE + path, {
     headers: {
@@ -449,7 +467,13 @@ async function apiGet(path){
       'x-rapidapi-host': API_HOST
     }
   });
-  return r.json();
+  let data = {};
+  try { data = await r.json(); } catch(e) {}
+  if(!r.ok){
+    const message = data?.message || `HTTP ${r.status}`;
+    throw new Error(`API Error: ${message}`);
+  }
+  return data;
 }
 
 async function loadFixtures(){
@@ -484,14 +508,22 @@ async function loadFixtures(){
       matches = matches.filter(isLive);
     }
 
-    const liveCount = matches.filter(isLive).length;
-    $('liveCount').textContent = String(liveCount).padStart(2,'0');
-    $('matchesList').innerHTML = matches.length
-      ? matches.map(fixtureCard).join('')
-      : '<div class="card empty">لا توجد مباريات مطابقة.</div>';
+    saveMatchesCache(ymd, matches);
+    renderMatches(matches);
   }catch(e){
     console.error(e);
-    $('matchesList').innerHTML = '<div class="card empty">تعذر جلب المباريات حالياً.</div>';
+    const cached = s === 'LIVE' ? null : readMatchesCache(ymd);
+    if(cached){
+      let matches = cached.matches || [];
+      if(l === 'all') matches = matches.filter(m => ALLOWED_LEAGUES.has(Number(m.leagueId)));
+      else matches = matches.filter(m => String(m.leagueId) === String(l));
+      if(s === 'UPCOMING') matches = matches.filter(isUpcoming);
+      if(s === 'FINISHED') matches = matches.filter(isFinished);
+      renderMatches(matches, 'تعذر تحديث البيانات الآن — يتم عرض آخر نسخة محفوظة.');
+    }else{
+      $('liveCount').textContent = '00';
+      $('matchesList').innerHTML = `<div class="card empty">تعذر جلب المباريات حالياً.<br><small style="color:#ff9aaa">${e.message}</small><br><small>تحقق من حصة API أو جرّب بعد تجددها.</small></div>`;
+    }
   }
 }
 
@@ -506,4 +538,4 @@ $('status').onchange = loadFixtures;
 $('league').onchange = loadFixtures;
 loadFixtures();
 setInterval(loadFixtures, 60000);
-</script></script></body></html>
+</script></body></html>
