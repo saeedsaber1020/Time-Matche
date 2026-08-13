@@ -51,56 +51,98 @@ function dateYMD(d){
   return `${y}-${m}-${day}`;
 }
 
-function parseVal(val){
-  if (!val && val !== 0) return null;
-  if (typeof val === 'string' || typeof val === 'number') return String(val);
+// دالة مساعدة عامة لاستخراج النصوص من الكائنات أو المتغيرات بمختلف المسميات
+function extractStr(val) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string' || typeof val === 'number') return String(val).trim();
   if (typeof val === 'object') {
-    return val.name || val.title || val.ar || val.en || val.name_ar || val.team_name || null;
+    return val.name || val.title || val.name_ar || val.ar || val.en || val.shortName || val.short_name || '';
   }
-  return null;
+  return '';
 }
 
-// دالة المعالجة المحدثة لتكون متوافقة 100% مع Sofascore الـ API الحالي
+// دالة مساعدة عامة لاستخراج الأهداف
+function extractScore(val) {
+  if (val === null || val === undefined) return '-';
+  if (typeof val === 'number' || typeof val === 'string') return String(val);
+  if (typeof val === 'object') {
+    if (val.current !== undefined) return String(val.current);
+    if (val.display !== undefined) return String(val.display);
+    if (val.score !== undefined) return String(val.score);
+  }
+  return '-';
+}
+
 function normalizeMatch(m){
   if(!m) return {};
 
-  // 1. استخراج أسامي الفريقين
-  const homeName = m.homeTeam?.name || parseVal(m.home_team_name) || parseVal(m.home_name) || parseVal(m.home) || 'غير معروف';
-  const awayName = m.awayTeam?.name || parseVal(m.away_team_name) || parseVal(m.away_name) || parseVal(m.away) || 'غير معروف';
+  // 1. استخراج اسم الفريق الأول
+  const homeName = extractStr(m.homeTeam) || 
+                   extractStr(m.home_team) || 
+                   extractStr(m.home) || 
+                   extractStr(m.team1) || 
+                   extractStr(m.team_home) || 
+                   extractStr(m.home_name) || 
+                   extractStr(m.home_team_name) || 
+                   'غير معروف';
 
-  // 2. جلب شعارات الفرق مباشرة من Sofascore باستخدام الـ Team ID
-  const homeLogo = m.homeTeam?.id ? `https://api.sofascore.com/api/v1/team/${m.homeTeam.id}/image` : (m.home_team_logo || m.home_logo || '');
-  const awayLogo = m.awayTeam?.id ? `https://api.sofascore.com/api/v1/team/${m.awayTeam.id}/image` : (m.away_team_logo || m.away_logo || '');
+  // 2. استخراج اسم الفريق الثاني
+  const awayName = extractStr(m.awayTeam) || 
+                   extractStr(m.away_team) || 
+                   extractStr(m.away) || 
+                   extractStr(m.team2) || 
+                   extractStr(m.team_away) || 
+                   extractStr(m.away_name) || 
+                   extractStr(m.away_team_name) || 
+                   'غير معروف';
 
-  // 3. استخراج الأهداف الحالية
-  const homeScore = m.homeScore?.current ?? m.home_score ?? m.home_goals ?? '-';
-  const awayScore = m.awayScore?.current ?? m.away_score ?? m.away_goals ?? '-';
+  // 3. استخراج الشعارات
+  let homeLogo = m.homeTeam?.logo || m.home_logo || m.home_team_logo || m.team1_logo || '';
+  if (!homeLogo && m.homeTeam?.id) {
+    homeLogo = `https://api.sofascore.com/api/v1/team/${m.homeTeam.id}/image`;
+  }
 
-  // 4. استخراج اسم البطولة
-  const leagueName = m.tournament?.name || parseVal(m.league_name) || parseVal(m.league) || 'مباراة دولية / محلية';
+  let awayLogo = m.awayTeam?.logo || m.away_logo || m.away_team_logo || m.team2_logo || '';
+  if (!awayLogo && m.awayTeam?.id) {
+    awayLogo = `https://api.sofascore.com/api/v1/team/${m.awayTeam.id}/image`;
+  }
 
-  // 5. حالة المباراة والتوقيت
-  const statusType = m.status?.type;
-  const isLive = statusType === 'inprogress' || m.status === 1 || m.status === '1' || m.is_live;
-  const isFinished = statusType === 'finished' || m.status === 2 || m.status === '2' || m.is_finished;
-  const isUpcoming = !isLive && !isFinished;
+  // 4. استخراج الأهداف
+  let homeScore = extractScore(m.homeScore);
+  if (homeScore === '-') homeScore = extractScore(m.home_score);
+  if (homeScore === '-') homeScore = extractScore(m.score1);
 
-  // تحويل التوقيت إلى صيغة سريعة ومحلية
+  let awayScore = extractScore(m.awayScore);
+  if (awayScore === '-') awayScore = extractScore(m.away_score);
+  if (awayScore === '-') awayScore = extractScore(m.score2);
+
+  // 5. استخراج اسم البطولة
+  const leagueName = extractStr(m.tournament) || 
+                     extractStr(m.league) || 
+                     extractStr(m.league_name) || 
+                     extractStr(m.competition) || 
+                     'مباراة دولية / محلية';
+
+  // 6. توقيت وحالة المباراة
   let matchTime = '--:--';
   if (m.startTimestamp) {
     matchTime = new Date(m.startTimestamp * 1000).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
   } else if (m.time) {
-    matchTime = m.time;
+    matchTime = extractStr(m.time);
   }
 
-  let statusText = 'قادمة';
+  const statusType = typeof m.status === 'object' ? m.status?.type : String(m.status || '');
+  const statusDesc = typeof m.status === 'object' ? m.status?.description : '';
+
+  const isLive = statusType === 'inprogress' || statusType === 'live' || m.status === 1 || m.status === '1' || m.is_live || false;
+  const isFinished = statusType === 'finished' || m.status === 2 || m.status === '2' || m.is_finished || false;
+  const isUpcoming = !isLive && !isFinished;
+
+  let statusText = matchTime;
   if(isLive){
-    const min = m.status?.description ? ` (${m.status.description}')` : '';
-    statusText = `مباشر${min}`;
+    statusText = statusDesc ? `مباشر (${statusDesc})` : 'مباشر';
   } else if(isFinished){
     statusText = 'انتهت';
-  } else {
-    statusText = matchTime;
   }
 
   return {
@@ -233,12 +275,22 @@ async function loadFixtures(){
     if(!res.ok) throw new Error(`HTTP error ${res.status}`);
     
     const data = await res.json();
-    
-    // دعم مصفوفة Sofascore الخارجية data.events
-    let rawMatches = Array.isArray(data) ? data : (data.events || data.matches || data.data || []);
-    
-    if(!Array.isArray(rawMatches)){
-      rawMatches = [];
+    console.log("البيانات الراجعة من السيرفر:", data); // يتيح معاينة الـ JSON في الفحص F12
+
+    // استخراج المصفوفة بغض النظر عن اسمها في الاستجابة
+    let rawMatches = [];
+    if (Array.isArray(data)) {
+      rawMatches = data;
+    } else if (Array.isArray(data.events)) {
+      rawMatches = data.events;
+    } else if (Array.isArray(data.matches)) {
+      rawMatches = data.matches;
+    } else if (Array.isArray(data.data)) {
+      rawMatches = data.data;
+    } else if (Array.isArray(data.result)) {
+      rawMatches = data.result;
+    } else if (typeof data === 'object') {
+      rawMatches = Object.values(data).filter(item => typeof item === 'object');
     }
 
     let matches = rawMatches.map(normalizeMatch);
