@@ -41,8 +41,9 @@ let lastDayKey = dateYMD(new Date());
 const STREAMS = {
   "الهلال-الفيصلي": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/421785.ts",
   "الاتفاق-الرياض": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/421786.ts",
-  "غلطة سراي-تشوروم": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/325793.m3u8"
+  "غلطة سراي-تشوروم": "http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/325793.m3u8",
 };
+
 
 const $ = id => document.getElementById(id);
 
@@ -312,10 +313,19 @@ function loadStream(url){
     wrap.innerHTML = `<video id="streamVideo" controls autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;background:#000"></video>`;
     const video = document.getElementById('streamVideo');
     if(window.mpegts && mpegts.getFeatureList().mseLivePlayback){
-      const player = mpegts.createPlayer({ type:'mse', isLive:true, url:src });
+      const player = mpegts.createPlayer({
+        type: 'mpegts',
+        isLive: true,
+        url: src,
+        cors: true,
+        config: { enableStashBuffer: false, liveBufferLatencyChasing: true }
+      });
       player.attachMediaElement(video);
+      player.on(mpegts.Events.ERROR, (type, detail, info) => {
+        console.error('MPEG-TS stream error:', type, detail, info);
+      });
       player.load();
-      player.play().catch(()=>{});
+      player.play().catch(() => {});
       activePlayer = player;
     } else video.src = src;
     return;
