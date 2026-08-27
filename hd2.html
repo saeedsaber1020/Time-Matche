@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>مشغل البث</title>
+
+  <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --blue: #0c1889;
+      --red: #911e1e;
+      --telegram: #168acd;
+    }
+
+    * {
+      box-sizing: border-box;
+      text-decoration: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .broadcast-bar {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: #000;
+    }
+
+    .broadcast-button {
+      flex: 1;
+      height: 42px;
+      border: 0;
+      border-radius: 3px;
+      background: var(--blue);
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .broadcast-button:hover,
+    .broadcast-button.active {
+      background: var(--red);
+    }
+
+    .player-wrapper {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 50px);
+      min-height: 250px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .video-js,
+    .video-js .vjs-tech {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      background: #000;
+    }
+
+    .player-actions {
+      position: absolute;
+      z-index: 20;
+      top: 8px;
+      right: 8px;
+      left: 8px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .action-button {
+      pointer-events: auto;
+      border: 0;
+      border-radius: 4px;
+      padding: 7px 12px;
+      background: var(--red);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .action-button:hover {
+      background: #b72a2a;
+    }
+
+    .stream-status {
+      position: absolute;
+      z-index: 15;
+      right: 15px;
+      bottom: 55px;
+      left: 15px;
+      display: none;
+      padding: 10px;
+      border-radius: 5px;
+      background: rgba(145, 30, 30, .94);
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .share-overlay {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      background: rgba(0, 0, 0, .9);
+    }
+
+    .share-overlay.open {
+      display: flex;
+    }
+
+    .share-box {
+      width: min(600px, 100%);
+      padding: 20px;
+      border-radius: 8px;
+      background: #171717;
+      text-align: center;
+    }
+
+    .share-box h3 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .share-box textarea {
+      width: 100%;
+      height: 75px;
+      padding: 8px;
+      resize: none;
+      direction: ltr;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #292929;
+      color: #fff;
+    }
+
+    .share-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .share-buttons button {
+      border: 0;
+      border-radius: 4px;
+      padding: 8px 18px;
+      background: var(--blue);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .share-buttons .close {
+      background: #555;
+    }
+
+    .telegram-float {
+      position: fixed;
+      z-index: 90;
+      right: 18px;
+      bottom: 18px;
+      width: min(310px, calc(100% - 36px));
+      padding: 24px 16px 16px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 10px;
+      background: linear-gradient(145deg, #168acd, #0c6fa9);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, .65);
+      text-align: center;
+      animation: popup .35s ease-out;
+    }
+
+    @keyframes popup {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(.94);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .telegram-icon {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 7px;
+      fill: #fff;
+    }
+
+    .telegram-float strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .telegram-float small {
+      display: block;
+      margin-top: 5px;
+      color: rgba(255, 255, 255, .9);
+      font-size: 12px;
+    }
+
+    .telegram-join {
+      display: block;
+      margin-top: 13px;
+      padding: 9px 12px;
+      border-radius: 5px;
+      background: #fff;
+      color: #0c6fa9;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .telegram-close {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      width: 23px;
+      height: 23px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .35);
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 21px;
+    }
+
+    @media (max-width: 640px) {
+      .broadcast-button {
+        height: 32px;
+        font-size: 14px;
+      }
+
+      .player-wrapper {
+        height: calc(100vh - 40px);
+      }
+
+      .action-button {
+        padding: 5px 9px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="broadcast-bar" aria-label="اختيار البث">
+    <button class="broadcast-button active" type="button" data-stream="0">
+      البث 1
+    </button>
+
+    <button class="broadcast-button" type="button" data-stream="1">
+      البث 2
+    </button>
+  </nav>
+
+  <main class="player-wrapper">
+
+    <div class="player-actions">
+      <button class="action-button" type="button" onclick="reloadPlayer()">
+        ↻ تحديث
+      </button>
+
+      <button class="action-button" type="button" onclick="openShare()">
+        مشاركة ↗
+      </button>
+    </div>
+
+    <video
+      id="videoPlayer"
+      class="video-js vjs-big-play-centered"
+      controls
+      playsinline
+      crossorigin="anonymous"
+      preload="auto">
+    </video>
+
+    <div id="streamStatus" class="stream-status"></div>
+
+  </main>
+
+  <div
+    id="telegramFloat"
+    class="telegram-float"
+    role="dialog"
+    aria-label="قناة التليجرام">
+
+    <button
+      class="telegram-close"
+      type="button"
+      aria-label="إغلاق"
+      onclick="closeTelegramFloat(event)">
+      ×
+    </button>
+
+    <svg
+      class="telegram-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true">
+
+      <path d="M21.5 3.5 18.2 20c-.25 1.17-.9 1.46-1.83.91l-5.04-3.72-2.43 2.34c-.27.27-.5.5-1.02.5l.36-5.13 9.34-8.44c.41-.36-.09-.56-.64-.2L5.39 13.58.42 12.02c-1.08-.34-1.1-1.08.23-1.58L20.08 2.9c.9-.33 1.68.2 1.42.6Z"></path>
+
+    </svg>
+
+    <strong>
+      لمشاهدة جميع المباريات انضم لقناة التليجرام
+    </strong>
+
+    <small>
+      تابع مواعيد المباريات والبث المباشر
+    </small>
+
+    <a
+      class="telegram-join"
+      href="https://t.me/TimeMatche"
+      target="_blank"
+      rel="noopener noreferrer nofollow">
+      انضم إلى القناة الآن
+    </a>
+
+  </div>
+
+  <div
+    id="shareOverlay"
+    class="share-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label="مشاركة المشغل">
+
+    <div class="share-box">
+
+      <h3>كود تضمين المشغل</h3>
+
+      <textarea
+        id="embedCode"
+        readonly
+        onclick="this.select()"></textarea>
+
+      <div class="share-buttons">
+
+        <button
+          type="button"
+          onclick="copyEmbedCode()">
+          نسخ الكود
+        </button>
+
+        <button
+          class="close"
+          type="button"
+          onclick="closeShare()">
+          إغلاق
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
+
+  <script>
+
+    /* =====================================================
+       روابط البث
+       غيّر الروابط من هنا فقط
+       ===================================================== */
+
+    const streams = [
+
+      'http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/325793.m3u8',
+
+      'http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/325803.m3u8'
+
+    ];
+
+
+    /* =====================================================
+       إعداد المشغل
+       ===================================================== */
+
+    const videoPlayer = videojs('videoPlayer', {
+
+      controls: true,
+
+      autoplay: false,
+
+      liveui: true,
+
+      responsive: true,
+
+      fluid: false,
+
+      html5: {
+
+        vhs: {
+
+          overrideNative: true,
+
+          withCredentials: false,
+
+          enableLowInitialPlaylist: true,
+
+          limitRenditionByPlayerDimensions: false,
+
+          useDevicePixelRatio: true
+
+        }
+
+      }
+
+    });
+
+
+    const streamStatus =
+      document.getElementById('streamStatus');
+
+    const streamButtons =
+      document.querySelectorAll('.broadcast-button');
+
+
+    let currentStream = 0;
+
+    let switchingStream = false;
+
+
+    /* =====================================================
+       الرسائل
+       ===================================================== */
+
+    function showStatus(text) {
+
+      streamStatus.textContent = text;
+
+      streamStatus.style.display = 'block';
+
+    }
+
+
+    function hideStatus() {
+
+      streamStatus.textContent = '';
+
+      streamStatus.style.display = 'none';
+
+    }
+
+
+    /* =====================================================
+       الزر النشط
+       ===================================================== */
+
+    function setActiveButton(index) {
+
+      streamButtons.forEach(function(button, buttonIndex) {
+
+        button.classList.toggle(
+          'active',
+          buttonIndex === index
+        );
+
+      });
+
+    }
+
+
+    /* =====================================================
+       تغيير البث - نسخة أسرع
+       ===================================================== */
+
+    function switchStream(index) {
+
+      if (!streams[index]) {
+        showStatus('رابط البث غير موجود.');
+        return;
+      }
+
+      currentStream = index;
+
+      switchingStream = true;
+
+      setActiveButton(index);
+
+      hideStatus();
+
+
+      /*
+       * إيقاف البث القديم فورًا
+       */
+
+      videoPlayer.pause();
+
+
+      /*
+       * إزالة المصدر القديم
+       */
+
+      videoPlayer.reset();
+
+
+      /*
+       * وضع الرابط الجديد
+       */
+
+      videoPlayer.src({
+
+        src: streams[index],
+
+        type: 'application/x-mpegURL'
+
+      });
+
+
+      /*
+       * تحميل البث الجديد
+       */
+
+      videoPlayer.load();
+
+
+      /*
+       * تشغيله بمجرد أن يصبح جاهزًا
+       */
+
+      videoPlayer.one(
+        'loadedmetadata',
+        function () {
+
+          switchingStream = false;
+
+          videoPlayer.play().catch(function () {});
+
+        }
+      );
+
+
+      /*
+       * في بعض بثوث HLS لا يصل loadedmetadata بسرعة،
+       * لذلك نحاول التشغيل عند وصول البيانات أيضًا.
+       */
+
+      videoPlayer.one(
+        'canplay',
+        function () {
+
+          if (switchingStream) {
+
+            switchingStream = false;
+
+            videoPlayer.play().catch(function () {});
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       خطأ البث
+       ===================================================== */
+
+    videoPlayer.on('error', function () {
+
+      const error = videoPlayer.error();
+
+      console.log('Video.js Error:', error);
+
+      showStatus(
+        'تعذر تشغيل البث الحالي. جرّب تحديث البث أو البث الآخر.'
+      );
+
+    });
+
+
+    /* =====================================================
+       أزرار البث
+       ===================================================== */
+
+    streamButtons.forEach(function(button) {
+
+      button.addEventListener(
+        'click',
+        function () {
+
+          const index =
+            Number(button.dataset.stream);
+
+          switchStream(index);
+
+        }
+      );
+
+    });
+
+
+    /* =====================================================
+       تحديث البث
+       ===================================================== */
+
+    function reloadPlayer() {
+
+      switchStream(currentStream);
+
+    }
+
+
+    /* =====================================================
+       المشاركة
+       ===================================================== */
+
+    function openShare() {
+
+      const pageUrl =
+        window.location.href.split('#')[0];
+
+      document.getElementById('embedCode').value =
+        '<iframe allowfullscreen="true" frameborder="0" height="500px" scrolling="no" src="' +
+        pageUrl +
+        '" width="100%"></iframe>';
+
+      document
+        .getElementById('shareOverlay')
+        .classList
+        .add('open');
+
+    }
+
+
+    function closeShare() {
+
+      document
+        .getElementById('shareOverlay')
+        .classList
+        .remove('open');
+
+    }
+
+
+    /* =====================================================
+       نسخ كود التضمين
+       ===================================================== */
+
+    function copyEmbedCode() {
+
+      const textarea =
+        document.getElementById('embedCode');
+
+      textarea.select();
+
+      textarea.setSelectionRange(
+        0,
+        99999
+      );
+
+
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+
+        navigator.clipboard
+          .writeText(textarea.value)
+          .then(function () {
+
+            alert('تم نسخ كود التضمين');
+
+          });
+
+      } else {
+
+        document.execCommand('copy');
+
+        alert('تم نسخ كود التضمين');
+
+      }
+
+    }
+
+
+    /* =====================================================
+       إغلاق نافذة التليجرام
+       ===================================================== */
+
+    function closeTelegramFloat(event) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      document.getElementById(
+        'telegramFloat'
+      ).style.display = 'none';
+
+    }
+
+
+    /* =====================================================
+       إغلاق المشاركة بالضغط خارجها
+       ===================================================== */
+
+    document
+      .getElementById('shareOverlay')
+      .addEventListener(
+        'click',
+        function(event) {
+
+          if (event.target === this) {
+
+            closeShare();
+
+          }
+
+        }
+      );
+
+
+    /* =====================================================
+       تشغيل البث الأول
+       ===================================================== */
+
+    switchStream(0);
+
+  </script>
+
+</body>
+</html>
