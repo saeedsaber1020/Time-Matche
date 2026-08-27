@@ -1,101 +1,54 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="referrer" content="no-referrer" />
-  <title>bein max 1</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>مشغل البث</title>
+
+  <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet">
 
   <style>
     :root {
-      --main-color: #0c1889;
-      --active-color: #911e1e;
-      --background: #000;
-      --text-color: #fff;
+      --blue: #0c1889;
+      --red: #911e1e;
+      --telegram: #168acd;
     }
 
-    * {
-      box-sizing: border-box;
-      text-decoration: none;
-    }
+    * { box-sizing: border-box; text-decoration: none; }
 
-    html,
-    body {
+    html, body {
       width: 100%;
       height: 100%;
       margin: 0;
-      background: var(--background);
-      color: var(--text-color);
+      background: #000;
+      color: #fff;
       font-family: Arial, sans-serif;
     }
 
-    body {
-      overflow: hidden;
-    }
+    body { overflow: hidden; }
 
-    /* شريط أزرار البث */
     .broadcast-bar {
-      width: 100%;
       display: flex;
       gap: 4px;
       padding: 4px;
       background: #000;
-      direction: rtl;
     }
 
-    .broadcast-bar a {
+    .broadcast-button {
       flex: 1;
-      min-width: 0;
       height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 5px;
-      border-radius: 2px;
-      background: var(--main-color);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
-      transition: background .2s ease;
-    }
-
-    .broadcast-bar a:hover,
-    .broadcast-bar a.active {
-      background: var(--active-color);
-    }
-
-    /* أزرار التحديث والمشاركة فوق المشغل */
-    .player-actions {
-      position: absolute;
-      z-index: 20;
-      top: 8px;
-      right: 8px;
-      left: 8px;
-      height: 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      pointer-events: none;
-    }
-
-    .action-button {
-      pointer-events: auto;
       border: 0;
       border-radius: 3px;
-      padding: 6px 12px;
-      background: var(--active-color);
+      background: var(--blue);
       color: #fff;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 700;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .45);
     }
 
-    .action-button:hover {
-      background: #b72a2a;
-    }
+    .broadcast-button:hover,
+    .broadcast-button.active { background: var(--red); }
 
     .player-wrapper {
       position: relative;
@@ -106,39 +59,55 @@
       background: #000;
     }
 
-    .video-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
-
-    .video-container video {
+    .video-js,
+    .video-js .vjs-tech {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
+      width: 100% !important;
+      height: 100% !important;
       background: #000;
     }
 
-    .stream-error {
+    .player-actions {
       position: absolute;
-      z-index: 5;
+      z-index: 20;
+      top: 8px;
+      right: 8px;
+      left: 8px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .action-button {
+      pointer-events: auto;
+      border: 0;
+      border-radius: 4px;
+      padding: 7px 12px;
+      background: var(--red);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .action-button:hover { background: #b72a2a; }
+
+    .stream-status {
+      position: absolute;
+      z-index: 15;
       right: 15px;
-      bottom: 15px;
+      bottom: 55px;
       left: 15px;
       display: none;
       padding: 10px;
-      border-radius: 4px;
-      background: rgba(145, 30, 30, .92);
+      border-radius: 5px;
+      background: rgba(145, 30, 30, .94);
       color: #fff;
       text-align: center;
       font-size: 13px;
     }
 
-    /* نافذة المشاركة */
     .share-overlay {
       position: fixed;
       z-index: 100;
@@ -150,60 +119,14 @@
       background: rgba(0, 0, 0, .9);
     }
 
-    .share-overlay.open {
-      display: flex;
-    }
+    .share-overlay.open { display: flex; }
+    .share-box { width: min(600px, 100%); padding: 20px; border-radius: 8px; background: #171717; text-align: center; }
+    .share-box h3 { margin: 0 0 12px; font-size: 20px; }
+    .share-box textarea { width: 100%; height: 75px; padding: 8px; resize: none; direction: ltr; border: 1px solid #444; border-radius: 4px; background: #292929; color: #fff; }
+    .share-buttons { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+    .share-buttons button { border: 0; border-radius: 4px; padding: 8px 18px; background: var(--blue); color: #fff; cursor: pointer; font-weight: 700; }
+    .share-buttons .close { background: #555; }
 
-    .share-box {
-      width: min(600px, 100%);
-      padding: 20px;
-      border-radius: 6px;
-      background: #171717;
-      text-align: center;
-    }
-
-    .share-box h3 {
-      margin: 0 0 12px;
-      color: #fff;
-      font-size: 20px;
-    }
-
-    .share-box textarea {
-      width: 100%;
-      height: 72px;
-      resize: none;
-      direction: ltr;
-      padding: 8px;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background: #292929;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    .share-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .share-buttons button {
-      border: 0;
-      border-radius: 4px;
-      padding: 8px 18px;
-      color: #fff;
-      background: var(--main-color);
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .share-buttons button.close {
-      background: #555;
-    }
-
-    /* نافذة تيليجرام الصغيرة المنبثقة */
     .telegram-float {
       position: fixed;
       z-index: 90;
@@ -214,162 +137,68 @@
       border: 1px solid rgba(255, 255, 255, .18);
       border-radius: 10px;
       background: linear-gradient(145deg, #168acd, #0c6fa9);
-      color: #fff;
       box-shadow: 0 5px 20px rgba(0, 0, 0, .65);
-      direction: rtl;
       text-align: center;
-      animation: telegramPopup .35s ease-out;
+      animation: popup .35s ease-out;
     }
 
-    @keyframes telegramPopup {
-      from {
-        opacity: 0;
-        transform: translateY(18px) scale(.94);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    @keyframes popup {
+      from { opacity: 0; transform: translateY(18px) scale(.94); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .telegram-float strong {
-      display: block;
-      color: #fff;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .telegram-float small {
-      display: block;
-      margin-top: 5px;
-      color: rgba(255, 255, 255, .9);
-      font-size: 12px;
-    }
-
-    .telegram-icon {
-      width: 38px;
-      height: 38px;
-      margin-bottom: 7px;
-      fill: #fff;
-    }
-
-    .telegram-join {
-      display: block;
-      margin-top: 13px;
-      padding: 9px 12px;
-      border-radius: 5px;
-      background: #fff;
-      color: #0c6fa9;
-      font-size: 14px;
-      font-weight: 700;
-      transition: background .2s ease, color .2s ease;
-    }
-
-    .telegram-join:hover {
-      background: #e9f7ff;
-      color: #07547f;
-    }
-
-    .telegram-close {
-      position: absolute;
-      top: 7px;
-      left: 7px;
-      width: 23px;
-      height: 23px;
-      padding: 0;
-      border: 0;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, .35);
-      color: #fff;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 21px;
-    }
-
-    .telegram-close:hover {
-      background: rgba(0, 0, 0, .6);
-    }
+    .telegram-icon { width: 38px; height: 38px; margin-bottom: 7px; fill: #fff; }
+    .telegram-float strong { display: block; font-size: 15px; line-height: 1.6; }
+    .telegram-float small { display: block; margin-top: 5px; color: rgba(255, 255, 255, .9); font-size: 12px; }
+    .telegram-join { display: block; margin-top: 13px; padding: 9px 12px; border-radius: 5px; background: #fff; color: #0c6fa9; font-size: 14px; font-weight: 700; }
+    .telegram-close { position: absolute; top: 7px; left: 7px; width: 23px; height: 23px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .35); color: #fff; cursor: pointer; font-size: 16px; font-weight: 700; line-height: 21px; }
 
     @media (max-width: 640px) {
-      .broadcast-bar a {
-        height: 32px;
-        font-size: 14px;
-      }
-
-      .player-wrapper {
-        height: calc(100vh - 40px);
-      }
-
-      .action-button {
-        padding: 5px 9px;
-        font-size: 12px;
-      }
+      .broadcast-button { height: 32px; font-size: 14px; }
+      .player-wrapper { height: calc(100vh - 40px); }
+      .action-button { padding: 5px 9px; font-size: 12px; }
     }
   </style>
 </head>
-
 <body>
-  <!-- البث 1 والبث 2 -->
   <nav class="broadcast-bar" aria-label="اختيار البث">
-    <a
-      href="#"
-      class="broadcast-link active"
-      data-stream="0"
-      title="تشغيل البث 1">
-      البث 1
-    </a>
-
-    <a
-      href="#"
-      class="broadcast-link"
-      data-stream="1"
-      title="تشغيل البث 2">
-      البث 2
-    </a>
+    <button class="broadcast-button active" type="button" data-stream="0">البث 1</button>
+    <button class="broadcast-button" type="button" data-stream="1">البث 2</button>
   </nav>
 
   <main class="player-wrapper">
-    <!-- زر التحديث وزر المشاركة -->
     <div class="player-actions">
-      <button class="action-button" type="button" onclick="reloadPlayer()" title="تحديث البث">
-        ↻ تحديث
-      </button>
-
-      <button class="action-button" type="button" onclick="openShare()" title="مشاركة المشغل">
-        مشاركة ↗
-      </button>
+      <button class="action-button" type="button" onclick="reloadPlayer()">↻ تحديث</button>
+      <button class="action-button" type="button" onclick="openShare()">مشاركة ↗</button>
     </div>
 
-    <div class="video-container">
-      <video id="videoPlayer" controls playsinline preload="auto" title="مشغل البث"></video>
-      <div id="streamError" class="stream-error"></div>
-    </div>
+    <video
+      id="videoPlayer"
+      class="video-js vjs-big-play-centered"
+      controls
+      playsinline
+      crossorigin="anonymous"
+      preload="auto"
+      data-setup='{"liveui":true,"html5":{"vhs":{"overrideNative":true}}}'>
+    </video>
+
+    <div id="streamStatus" class="stream-status"></div>
   </main>
 
-  <!-- نافذة منبثقة صغيرة لقناة التليجرام -->
   <div id="telegramFloat" class="telegram-float" role="dialog" aria-label="قناة التليجرام">
-    <button class="telegram-close" type="button" aria-label="إغلاق" title="إغلاق" onclick="closeTelegramFloat(event)">×</button>
-
+    <button class="telegram-close" type="button" aria-label="إغلاق" onclick="closeTelegramFloat(event)">×</button>
     <svg class="telegram-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M21.5 3.5 18.2 20c-.25 1.17-.9 1.46-1.83.91l-5.04-3.72-2.43 2.34c-.27.27-.5.5-1.02.5l.36-5.13 9.34-8.44c.41-.36-.09-.56-.64-.2L5.39 13.58.42 12.02c-1.08-.34-1.1-1.08.23-1.58L20.08 2.9c.9-.33 1.68.2 1.42.6Z"></path>
     </svg>
-
     <strong>لمشاهدة جميع المباريات انضم لقناة التليجرام</strong>
     <small>تابع مواعيد المباريات والبث المباشر</small>
-
-    <a class="telegram-join" href="https://t.me/TimeMatche" target="_blank" rel="noopener noreferrer nofollow">
-      انضم إلى القناة الآن
-    </a>
+    <a class="telegram-join" href="https://t.me/TimeMatche" target="_blank" rel="noopener noreferrer nofollow">انضم إلى القناة الآن</a>
   </div>
 
-  <!-- نافذة المشاركة -->
   <div id="shareOverlay" class="share-overlay" role="dialog" aria-modal="true" aria-label="مشاركة المشغل">
     <div class="share-box">
       <h3>كود تضمين المشغل</h3>
-
       <textarea id="embedCode" readonly onclick="this.select()"></textarea>
-
       <div class="share-buttons">
         <button type="button" onclick="copyEmbedCode()">نسخ الكود</button>
         <button class="close" type="button" onclick="closeShare()">إغلاق</button>
@@ -377,117 +206,95 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
+  <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
   <script>
+    /* روابط البث المباشرة */
     const streams = [
       'https://live-stream.skynewsarabia.com/c-horizontal-channel/horizontal-stream/index__6.m3u8',
       'http://185.191.126.127:8080/live//b0:99:d7:15:88:50/3090914536649669/325803.m3u8'
     ];
 
-    const videoPlayer = document.getElementById('videoPlayer');
-    const streamError = document.getElementById('streamError');
-    const broadcastLinks = document.querySelectorAll('.broadcast-link');
-    let hls = null;
+    const videoPlayer = videojs('videoPlayer', {
+      controls: true,
+      autoplay: false,
+      liveui: true,
+      responsive: true,
+      fluid: false,
+      html5: {
+        vhs: {
+          overrideNative: true,
+          withCredentials: false
+        }
+      }
+    });
 
-    function showStreamError(message) {
-      streamError.textContent = message;
-      streamError.style.display = 'block';
+    const streamStatus = document.getElementById('streamStatus');
+    const streamButtons = document.querySelectorAll('.broadcast-button');
+    let currentStream = 0;
+
+    function showStatus(text) {
+      streamStatus.textContent = text;
+      streamStatus.style.display = 'block';
     }
 
-    function hideStreamError() {
-      streamError.textContent = '';
-      streamError.style.display = 'none';
+    function hideStatus() {
+      streamStatus.textContent = '';
+      streamStatus.style.display = 'none';
     }
 
-    function setActiveBroadcast(index) {
-      broadcastLinks.forEach(function(link) {
-        link.classList.toggle('active', Number(link.dataset.stream) === index);
+    function setActiveButton(index) {
+      streamButtons.forEach(function(button, buttonIndex) {
+        button.classList.toggle('active', buttonIndex === index);
       });
     }
 
     function switchStream(index) {
-      const source = streams[index];
-      if (!source) {
-        showStreamError('رابط البث غير موجود.');
-        return;
-      }
+      currentStream = index;
+      setActiveButton(index);
+      hideStatus();
 
-      hideStreamError();
-      setActiveBroadcast(index);
-
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-
-      videoPlayer.pause();
-      videoPlayer.removeAttribute('src');
+      videoPlayer.src({
+        src: streams[index],
+        type: 'application/x-mpegURL'
+      });
       videoPlayer.load();
-
-      /* المتصفح يمنع روابط HTTP إذا كانت صفحة المشغل تعمل عبر HTTPS */
-      if (window.location.protocol === 'https:' && source.indexOf('http://') === 0) {
-        showStreamError('البث يستخدم HTTP. افتح المشغل عبر HTTP أو استخدم Proxy على نفس السيرفر لتجنب حظر Mixed Content.');
-        return;
-      }
-
-      if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-        videoPlayer.src = source;
-        videoPlayer.play().catch(function() {});
-        return;
-      }
-
-      if (window.Hls && Hls.isSupported()) {
-        hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 30
-        });
-
-        hls.loadSource(source);
-        hls.attachMedia(videoPlayer);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          videoPlayer.play().catch(function() {});
-        });
-
-        hls.on(Hls.Events.ERROR, function(event, data) {
-          if (data && data.fatal) {
-            showStreamError('تعذر تشغيل هذا البث. تأكد من أن الرابط يعمل وأن السيرفر يسمح بـ CORS.');
-            if (hls) {
-              hls.destroy();
-              hls = null;
-            }
-          }
-        });
-      } else {
-        showStreamError('المتصفح لا يدعم تشغيل HLS على هذا الجهاز.');
-      }
+      videoPlayer.play().catch(function() {});
     }
 
-    broadcastLinks.forEach(function(link) {
-      link.addEventListener('click', function(event) {
-        event.preventDefault();
-        switchStream(Number(link.dataset.stream));
+    videoPlayer.on('error', function() {
+      showStatus('تعذر تشغيل البث الحالي. جرّب الضغط على البث الآخر.');
+    });
+
+    streamButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        switchStream(Number(button.dataset.stream));
       });
     });
 
-    switchStream(0);
-
     function reloadPlayer() {
-      window.location.reload();
+      switchStream(currentStream);
     }
 
     function openShare() {
       const pageUrl = window.location.href.split('#')[0];
-      const embedCode = '<iframe allowfullscreen="true" frameborder="0" height="500px" scrolling="no" src="' + pageUrl + '" width="100%"></iframe>';
-
-      document.getElementById('embedCode').value = embedCode;
+      document.getElementById('embedCode').value = '<iframe allowfullscreen="true" frameborder="0" height="500px" scrolling="no" src="' + pageUrl + '" width="100%"></iframe>';
       document.getElementById('shareOverlay').classList.add('open');
     }
 
     function closeShare() {
       document.getElementById('shareOverlay').classList.remove('open');
+    }
+
+    function copyEmbedCode() {
+      const textarea = document.getElementById('embedCode');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textarea.value).then(function() { alert('تم نسخ كود التضمين'); });
+      } else {
+        document.execCommand('copy');
+        alert('تم نسخ كود التضمين');
+      }
     }
 
     function closeTelegramFloat(event) {
@@ -496,26 +303,11 @@
       document.getElementById('telegramFloat').style.display = 'none';
     }
 
-    function copyEmbedCode() {
-      const textarea = document.getElementById('embedCode');
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
-
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(textarea.value).then(function() {
-          alert('تم نسخ كود التضمين');
-        });
-      } else {
-        document.execCommand('copy');
-        alert('تم نسخ كود التضمين');
-      }
-    }
-
     document.getElementById('shareOverlay').addEventListener('click', function(event) {
-      if (event.target === this) {
-        closeShare();
-      }
+      if (event.target === this) closeShare();
     });
+
+    switchStream(0);
   </script>
 </body>
 </html>
